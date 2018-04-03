@@ -1,0 +1,10 @@
+{
+    "parent": "item/generated",
+	"variants": {
+		"normal": {
+			"textures": {
+				"layer0": "extra_blocks:item/armor_boots_org"
+			}
+		}
+	}
+}

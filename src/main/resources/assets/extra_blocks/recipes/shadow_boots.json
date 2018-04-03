@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "   ",
+        "A B",
+        "C D"
+    ],
+    "key": {
+        "A": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "B": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "C": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "D": {
+            "item": "extra_blocks:shadow_ingot"
+        }
+    },
+    "result": {
+        "item": "extra_blocks:shadow_boots"
+    }
+}

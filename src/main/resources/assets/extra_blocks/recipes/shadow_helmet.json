@@ -1,0 +1,28 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "ABC",
+        "D E",
+        "   "
+    ],
+    "key": {
+        "A": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "B": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "C": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "D": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "E": {
+            "item": "extra_blocks:shadow_ingot"
+        }
+    },
+    "result": {
+        "item": "extra_blocks:shadow_helmet"
+    }
+}

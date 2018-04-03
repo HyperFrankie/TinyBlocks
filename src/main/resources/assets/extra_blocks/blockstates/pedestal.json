@@ -1,0 +1,14 @@
+{
+    "forge_marker": 1,
+    "textures": {
+    
+    },
+    "variants": {
+        "normal": {
+            "model": "extra_blocks:testgui"
+        },
+        "inventory": {
+            "model": "extra_blocks:testgui"
+        }
+    }
+}

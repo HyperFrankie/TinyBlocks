@@ -1,0 +1,24 @@
+# Items
+item.shadow_ingot.name=Shadow Ingot
+
+# Blocks
+tile.shadow_ore.name=Shadow Ore
+tile.counter.name=Counter
+tile.testGUI.name=Test GUI
+tile.Pedestal.name=Pedestal
+
+# Armor
+item.shadow_helmet.name=Shadow Helmet
+item.shadow_chestplate.name=Shadow Chestplate
+item.shadow_leggings.name=Shadow Leggings
+item.shadow_boots.name=Shadow Boots
+
+# Tools
+item.shadow_sword.name=Shadow Sword
+item.shadow_pickaxe.name=Shadow Pickaxe
+item.shadow_axe.name=Shadow Axe
+item.shadow_shovel.name=Shadow Shovel
+item.shadow_hoe.name=Shadow Hoe
+
+# GUIs
+itemGroup.extra_blocks=Extra Blocks

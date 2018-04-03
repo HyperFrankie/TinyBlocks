@@ -1,0 +1,37 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "A C",
+        "DEF",
+        "GHI"
+    ],
+    "key": {
+        "A": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "C": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "D": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "E": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "F": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "G": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "H": {
+            "item": "extra_blocks:shadow_ingot"
+        },
+        "I": {
+            "item": "extra_blocks:shadow_ingot"
+        }
+    },
+    "result": {
+        "item": "extra_blocks:shadow_chestplate"
+    }
+}
