@@ -3,6 +3,7 @@ package com.extraBlocks.block.miniBlock;
 import java.util.List;
 
 import com.extraBlocks.Main;
+import com.extraBlocks.block.ModBlocks;
 import com.extraBlocks.item.ItemBase;
 import com.extraBlocks.item.ModItems;
 
@@ -66,14 +67,14 @@ public class Bit extends ItemBase {
 							(s == EnumFacing.UP) 	? 1.0 / 16.0 : (s == EnumFacing.DOWN) 	? 	-1.0 / 16.0 : 0.0,
 							(s == EnumFacing.SOUTH) ? 1.0 / 16.0 : (s == EnumFacing.NORTH) 	? 	-1.0 / 16.0 : 0.0
 							);
-					te.addBitToBlock(targetPos, Block.getBlockById(itemstack.getMetadata()));
+					te.addBitToBlock(targetPos, Block.getBlockById(itemstack.getMetadata()).getDefaultState());
 				}
 			}
 
 			return EnumActionResult.SUCCESS;
 		} else {
-			if (!itemstack.isEmpty() && player.canPlayerEdit(newPos, facing, itemstack) && worldIn.mayPlace(Block.getBlockById(player.getHeldItem(hand).getMetadata()), newPos, false, facing, (Entity) null)) {
-				int i = this.getMetadata(itemstack.getMetadata());
+			if (!itemstack.isEmpty() && player.canPlayerEdit(newPos, facing, itemstack) && worldIn.mayPlace(Block.getBlockById(player.getHeldItem(hand).getMetadata()), newPos, true, facing, (Entity) null)) {
+				int blockID = this.getMetadata(itemstack.getMetadata());
 				IBlockState iblockstate1 = Block.getBlockById(player.getHeldItem(hand).getMetadata()).getDefaultState();
 				if (placeBlockAt(itemstack, player, worldIn, newPos, facing, hitX, hitY, hitZ, iblockstate1)) {
 					iblockstate1 = worldIn.getBlockState(newPos);
@@ -98,14 +99,13 @@ public class Bit extends ItemBase {
 	 * @param player The player who is placing the block. Can be null if the block is not being placed by a player.
 	 * @param side The side the player (or machine) right-clicked on.
 	 */
-	public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState)
-	{
-		if (!world.setBlockState(pos, newState, 11)) return false;
+	public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState) {
+		IBlockState stateNew = ModBlocks.mini_block.getDefaultState();
+		if (!world.setBlockState(pos, stateNew, 11)) return false;
 
 		IBlockState state = world.getBlockState(pos);
 		if (state.getBlock() != Block.getBlockById(stack.getMetadata()).getDefaultState()) {
-			Block.getBlockById(stack.getMetadata()).onBlockPlacedBy(world, pos, state, player, stack);
-
+			((TileEntityMiniBlock) world.getTileEntity(pos)).addBitToBlock(MiniBlock.bounds, newState);
 			if (player instanceof EntityPlayerMP) CriteriaTriggers.PLACED_BLOCK.trigger((EntityPlayerMP) player, pos, stack);
 		}
 

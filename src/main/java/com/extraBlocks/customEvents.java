@@ -91,47 +91,48 @@ public class customEvents {
 				|| (stack.getItem() instanceof Bit && ItemChiselBase.currentChisel.canHarvestBlock(blockState))
 				) {
 			System.out.println("Trying to break with chisel");
-			if(stack.canHarvestBlock(blockState)) {
-				if (!e.getWorld().isRemote) {
-					if(block instanceof MiniBlock) {
-						TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
-						te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
-					} else {
-//						if(!Config.onlyBreakFullBlocksWithChisel || block.isFullBlock(blockState)) {
-						ResourceLocation recourse = block.getRegistryName();
-						e.getWorld().destroyBlock(e.getPos(), false);
-						e.getWorld().setBlockState(e.getPos(), ModBlocks.mini_block.getDefaultState());
-						TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
-//						((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.clear();
-//						((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
-						te.objs.clear();
-//						te.objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
-						te.objs.add(new Obj(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, blockState));
-						for(EnumFacing f : EnumFacing.VALUES) {
-							te.addToRenderMap(te, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f, blockState, false), false);
-						}
-
-//						te.renderMap.clear();
-//						for(EnumFacing f : EnumFacing.VALUES) {
-//							IBlockState s = Face.getBlockNextToFace(e.getWorld(), e.getPos(), f);
-//							if(!s.isOpaqueCube() && !s.isSideSolid(e.getWorld(), e.getPos(), f.getOpposite())) {
-//								te.renderMap.add(Face.getFullFaceFromEnumFacing(f, blockState));
-//							}
-//						}
-//						if(block.isFullBlock(blockState)) {
-//							te.addFullFaces(blockState);
-//						}
-						te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
+			if (!e.getWorld().isRemote) {
+				if(block instanceof MiniBlock) {
+					TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
+					te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
+				} else {
+//					if(!Config.onlyBreakFullBlocksWithChisel || block.isFullBlock(blockState)) {
+					ResourceLocation recourse = block.getRegistryName();
+					e.getWorld().destroyBlock(e.getPos(), false);
+					e.getWorld().setBlockState(e.getPos(), ModBlocks.mini_block.getDefaultState());
+					TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
+//					((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.clear();
+//					((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
+					te.objs.clear();
+//					te.objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
+					te.objs.add(new Obj(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, blockState));
+					for(EnumFacing f : EnumFacing.VALUES) {
+						te.addToRenderMap(te, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f, blockState, false), false);
 					}
+//					te.renderMap.clear();
+//					for(EnumFacing f : EnumFacing.VALUES) {
+//						IBlockState s = Face.getBlockNextToFace(e.getWorld(), e.getPos(), f);
+//						if(!s.isOpaqueCube() && !s.isSideSolid(e.getWorld(), e.getPos(), f.getOpposite())) {
+//							te.renderMap.add(Face.getFullFaceFromEnumFacing(f, blockState));
+//						}
+//					}
+//					if(block.isFullBlock(blockState)) {
+//						te.addFullFaces(blockState);
+//					}
+					te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
 				}
-				e.setCanceled(true);
+			}
+			e.setCanceled(true);
+		} else {
+			if(e.getEntityPlayer().isCreative()) {
+				e.setCanceled(false);
 			} else {
-				e.setCanceled(true);
+				e.setCanceled(true);	
 			}
 		}
 	}
 	
-	public ItemStack getBestChiselInHotbar(EntityPlayer p) {
+	public void getBestChiselInHotbar(EntityPlayer p) {
 		for(int i : new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8}) {
 			ItemStack s = p.inventory.getStackInSlot(i);
 			System.out.println("stack " + i + " is: " + s);
@@ -140,13 +141,14 @@ public class customEvents {
 				int level = 0;
 				if(currentCurrentChisel.getItem() instanceof ItemChiselBase) {
 					level = ((ItemChiselBase) currentCurrentChisel.getItem()).getHarvestLevelForChisel();
+					System.out.println(level);
 				}
 				if(((ItemChiselBase) s.getItem()).getHarvestLevelForChisel() > level) {
 					ItemChiselBase.currentChisel = s;
+					System.out.println(((ItemChiselBase) s.getItem()).getHarvestLevelForChisel());
 				}
 			}
 		}
-		return new ItemStack(Blocks.AIR);
 	}
 	
 	@SubscribeEvent

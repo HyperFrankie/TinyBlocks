@@ -16,8 +16,8 @@ public class Obj extends AxisAlignedBB implements Cloneable {
 		blockType = blockState;
 	}
 	
-	public Obj(AxisAlignedBB bb, Block block) {
-		this(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, block.getDefaultState());
+	public Obj(AxisAlignedBB bb, IBlockState blockState) {
+		this(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, blockState);
 	}
 
 	@Override

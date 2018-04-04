@@ -118,8 +118,8 @@ public class TileEntityMiniBlock extends TileEntity {
 	
 
 
-	public void addBitToBlock(AxisAlignedBB bb, Block block) {
-		Obj o = new Obj(bb, block);
+	public void addBitToBlock(AxisAlignedBB bb, IBlockState blockState) {
+		Obj o = new Obj(bb, blockState);
 		this.objs.add(o);
 		addFacesFromAddingBit(o);
 		this.joinBounds();
@@ -655,6 +655,13 @@ public class TileEntityMiniBlock extends TileEntity {
 			System.out.println(this.objs.get(i));
 		}
 		System.out.println("---------------------------------------------------");
+		if(this.objs.size() == 1) {
+			Obj o = this.objs.get(0);
+			if(o.minX == 0.0 && o.minY == 0.0 && o.minZ == 0.0 && o.maxX == 1.0 && o.maxY == 1.0 && o.maxZ == 1.0) {
+				System.out.println("Setting block back to normal: " + o.blockType + " at " + this.pos);
+				world.setBlockState(this.pos, o.blockType);
+			}
+		}
 	}
 	
 	public ArrayList<Obj> cloneList(ArrayList<Obj> list) {
