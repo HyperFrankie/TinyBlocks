@@ -9,6 +9,9 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import com.extraBlocks.Main;
 import com.extraBlocks.block.BlockTileEntity;
+import com.extraBlocks.block.ModBlocks;
+import com.extraBlocks.item.ModItems;
+import com.extraBlocks.item.tool.ItemChiselBase;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDynamicLiquid;
@@ -27,6 +30,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -120,7 +126,7 @@ public class TileEntityMiniBlock extends TileEntity {
 		this.markDirty();
 	}
 	
-	public void removeBitFromBlock(AxisAlignedBB bb, World world, BlockPos pos) {
+	public void removeBitFromBlock(@Nullable EntityPlayer cause, AxisAlignedBB bb, World world, BlockPos pos, boolean withDrops) {
 		if(world.getBlockState(pos).getBlock() instanceof BlockTileEntity<?>) {
 			if(((BlockTileEntity<?>) world.getBlockState(pos).getBlock()) != null) {
 				if(((BlockTileEntity<?>) world.getBlockState(pos).getBlock()).getTileEntityClass() == TileEntityMiniBlock.class) {
@@ -156,6 +162,22 @@ public class TileEntityMiniBlock extends TileEntity {
 							if(bb.minY > old.minY) {
 								Obj newBelowRemoval = new Obj((bb.minX >= old.minX) ? bb.minX : old.minX, bb.minY, (bb.minZ >= old.minZ) ? bb.minZ : old.minZ, (bb.maxX <= old.maxX) ? bb.maxX : old.maxX, old.minY, (bb.maxZ <= old.maxZ) ? bb.maxZ : old.maxZ, old.blockType);
 								this.objs.add(newBelowRemoval);
+							}
+							if(withDrops) {
+								double minX = (bb.minX >= old.minX) ? bb.minX : old.minX;
+								double minY = (bb.minY >= old.minY) ? bb.minY : old.minY;
+								double minZ = (bb.minZ >= old.minZ) ? bb.minZ : old.minZ;
+								double maxX = (bb.maxX <= old.maxX) ? bb.maxX : old.maxX;
+								double maxY = (bb.maxY <= old.maxY) ? bb.maxY : old.maxY;
+								double maxZ = (bb.maxZ <= old.maxZ) ? bb.maxZ : old.maxZ;
+								int volume = (int) ((16 * maxX - 16 * minX) * (16 * maxY - 16 * minY) * (16 * maxY - 16 * minY));
+								ItemStack itemStack = new ItemStack(ModItems.bit, volume);
+								itemStack.setItemDamage(Block.getIdFromBlock(old.blockType.getBlock()));
+								EntityItem item = new EntityItem(world, pos.getX(), pos.getY(), pos.getZ(), itemStack);
+								world.getChunkFromBlockCoords(pos).addEntity(item);
+								if(cause != null) {
+//									cause.inventory.mainInventory.get(cause.inventory.getSlotFor(ItemChiselBase.currentChisel)).damageItem(volume, cause);;
+								}
 							}
 							this.objs.remove(old);
 						}
@@ -229,9 +251,7 @@ public class TileEntityMiniBlock extends TileEntity {
 		
 		for(EnumFacing f : EnumFacing.VALUES) {
 			Face existing = doesBitOppositeFaceAlreadyExist(bb, f);
-			if(existing == null 
-//					|| Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(existing.iconName)
-					) {
+			if(existing != null) {
 				Obj neighbour = getNeighborBound(bb, f);
 				if(
 						neighbour == null || !neighbour.blockType.isOpaqueCube() 
@@ -247,9 +267,11 @@ public class TileEntityMiniBlock extends TileEntity {
 						|| neighbour.blockType.getBlock() instanceof BlockIce
 						|| neighbour.blockType.getBlock() instanceof BlockSlime
 						) {
-					addToRenderMap(this, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f.getOpposite(), neighbour.blockType, true), false);
+					addToRenderMap(this, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f.getOpposite(), bb.blockType, false), false);
 					removePartOfFace(bb, f);
 				}
+			} else {
+				addToRenderMap(this, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f.getOpposite(), bb.blockType, false), false);
 			}
 		}
 		updateFacesString(this);
@@ -496,68 +518,71 @@ public class TileEntityMiniBlock extends TileEntity {
 	
 	@Nullable
 	public Face doesBitOppositeFaceAlreadyExist(AxisAlignedBB bit, EnumFacing facing) {
-		ArrayList<Face> oldRenderMap = (ArrayList<Face>) renderMap.clone();
-		switch(facing) {
-		case UP :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.UP.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.minY == bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.minZ) {
-						return check;
+		if(renderMap != null) {
+			ArrayList<Face> oldRenderMap = (ArrayList<Face>) renderMap.clone();
+			switch(facing) {
+			case UP :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.UP.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.minY == bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.minZ) {
+							return check;
+						}
 					}
 				}
-			}
-			break;
-		case DOWN :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.DOWN.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.maxY == bit.minY && check.minZ <= bit.minZ && check.maxZ >= bit.minZ) {
-						return check;
+				break;
+			case DOWN :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.DOWN.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.maxY == bit.minY && check.minZ <= bit.minZ && check.maxZ >= bit.minZ) {
+							return check;
+						}
 					}
 				}
-			}
-			break;
-		case NORTH :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.NORTH.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.maxZ == bit.minZ) {
-						return check;
+				break;
+			case NORTH :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.NORTH.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.minX <= bit.minX && check.maxX >= bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.maxZ == bit.minZ) {
+							return check;
+						}
 					}
 				}
-			}
-			break;
-		case EAST :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.EAST.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.minX == bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.maxZ) {
-						return check;
+				break;
+			case EAST :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.EAST.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.minX == bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.maxZ) {
+							return check;
+						}
 					}
 				}
-			}
-			break;
-		case SOUTH :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.SOUTH.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.maxX <= bit.minX && check.maxX >= bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ == bit.maxZ) {
-						return check;
+				break;
+			case SOUTH :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.SOUTH.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.maxX <= bit.minX && check.maxX >= bit.maxX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ == bit.maxZ) {
+							return check;
+						}
 					}
 				}
-			}
-			break;
-		case WEST :
-			for(int i = 0; i < oldRenderMap.size(); i++) {
-				if(oldRenderMap.get(i).face == EnumFacing.WEST.getOpposite()) {
-					Face check = oldRenderMap.get(i);
-					if(check.maxX == bit.minX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.maxZ) {
-						return check;
+				break;
+			case WEST :
+				for(int i = 0; i < oldRenderMap.size(); i++) {
+					if(oldRenderMap.get(i).face == EnumFacing.WEST.getOpposite()) {
+						Face check = oldRenderMap.get(i);
+						if(check.maxX == bit.minX && check.minY <= bit.minY && check.maxY >= bit.maxY && check.minZ <= bit.minZ && check.maxZ >= bit.maxZ) {
+							return check;
+						}
 					}
 				}
+				break;
 			}
-			break;
+			return null;
 		}
 		return null;
 	}
@@ -621,7 +646,9 @@ public class TileEntityMiniBlock extends TileEntity {
 			}
 		}
 		
-		m.objs = this.objs;
+		if(m != null) {
+			m.objs = this.objs;
+		}
 		
 		System.out.println("---------------------------------------------------");
 		for(int i = 0; i < this.objs.size(); i++) {
@@ -749,7 +776,7 @@ public class TileEntityMiniBlock extends TileEntity {
 		for(IProperty p : blockState.getPropertyKeys()) {
 			s = s + "{" + p.getClass() + ", name=" + p.getName().toString() + ", value=" + blockState.getProperties().get(p).toString() + ", values=" + p.getAllowedValues() + "}, ";
 		}
-		return s.substring(0, s.length() - 3);
+		return s.substring(0, s.isEmpty() ? s.length() - 3 : 0);
 	}
 	
 	public IBlockState blockStateFromStringAndBaseState(IBlockState baseState, String blockStateString) {

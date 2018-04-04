@@ -17,7 +17,9 @@ import com.extraBlocks.proxy.CommonProxy;
 import com.extraBlocks.world.ShadowWorldGeneration;
 import com.google.common.collect.Maps;
 
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -81,6 +83,8 @@ public class Main {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
+		
+		InventoryChangeTrigger changeTrigger = new InventoryChangeTrigger();
 		
 		MinecraftForge.EVENT_BUS.register(this);
 		

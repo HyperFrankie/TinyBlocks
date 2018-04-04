@@ -53,7 +53,8 @@ public class ModItems {
 				chisel_iron,
 				chisel_diamond,
 				chisel_obsidian,
-				save_model
+				save_model,
+				bit
 				);
 	}
 
@@ -74,6 +75,7 @@ public class ModItems {
 		chisel_diamond.registerItemModel();
 		chisel_obsidian.registerItemModel();
 		save_model.registerItemModel();
+		bit.registerItemModel();
 	}
 
 }

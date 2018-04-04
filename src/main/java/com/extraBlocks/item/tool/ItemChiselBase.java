@@ -13,11 +13,13 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import scala.collection.Iterator;
 import scala.collection.mutable.Set;
 
 public class ItemChiselBase extends net.minecraft.item.ItemTool {
 
+	public static ItemStack currentChisel = new ItemStack(Item.getItemFromBlock(Blocks.AIR));
 	private String name;
 	private static final java.util.Set<Block> EFFECTIVE_ON = Sets.newHashSet(ModBlocks.mini_block);
 
@@ -29,6 +31,10 @@ public class ItemChiselBase extends net.minecraft.item.ItemTool {
 		setCreativeTab(Main.shadowTab);
 	}
 
+	public int getHarvestLevelForChisel() {
+		return this.toolMaterial.getHarvestLevel();
+	}
+	
 	public void registerItemModel() {
 		Main.proxy.registerItemRenderer(this, 0, name);
 	}

@@ -2,18 +2,29 @@ package com.extraBlocks;
 
 import com.extraBlocks.block.BlockTileEntity;
 import com.extraBlocks.block.ModBlocks;
+import com.extraBlocks.block.miniBlock.Bit;
 import com.extraBlocks.block.miniBlock.Face;
 import com.extraBlocks.block.miniBlock.MiniBlock;
 import com.extraBlocks.block.miniBlock.Obj;
 import com.extraBlocks.block.miniBlock.TileEntityMiniBlock;
+import com.extraBlocks.item.ModItems;
 import com.extraBlocks.item.tool.ItemChiselBase;
 
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.HotbarSnapshot;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.projectile.EntityArrow.PickupStatus;
+import net.minecraft.init.Blocks;
+import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemTool;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -24,13 +35,25 @@ import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.item.ItemEvent;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.internal.OpenGuiHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
+import scala.tools.nsc.backend.icode.Primitives.Logical;
 
 public class customEvents {
 
@@ -59,40 +82,46 @@ public class customEvents {
 		}
 		p.sendMessage(message);
 
-		if(stack.getItem() instanceof ItemChiselBase) {
+		if(stack.getItem() instanceof Bit) {
+			getBestChiselInHotbar(e.getEntityPlayer());
+		}
+		
+		if(
+				(stack.getItem() instanceof ItemChiselBase && stack.canHarvestBlock(blockState)) 
+				|| (stack.getItem() instanceof Bit && ItemChiselBase.currentChisel.canHarvestBlock(blockState))
+				) {
 			System.out.println("Trying to break with chisel");
 			if(stack.canHarvestBlock(blockState)) {
 				if (!e.getWorld().isRemote) {
 					if(block instanceof MiniBlock) {
 						TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
-						te.removeBitFromBlock(MiniBlock.bounds, e.getWorld(), e.getPos());
+						te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
 					} else {
 //						if(!Config.onlyBreakFullBlocksWithChisel || block.isFullBlock(blockState)) {
-							ResourceLocation recourse = block.getRegistryName();
-							e.getWorld().destroyBlock(e.getPos(), false);
-							e.getWorld().setBlockState(e.getPos(), ModBlocks.mini_block.getDefaultState());
-							TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
-//							((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.clear();
-//							((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
-							te.objs.clear();
-//							te.objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
-							te.objs.add(new Obj(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, blockState));
-							for(EnumFacing f : EnumFacing.VALUES) {
-								te.addToRenderMap(te, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f, blockState, false), false);
-							}
-							
-//							te.renderMap.clear();
-//							for(EnumFacing f : EnumFacing.VALUES) {
-//								IBlockState s = Face.getBlockNextToFace(e.getWorld(), e.getPos(), f);
-//								if(!s.isOpaqueCube() && !s.isSideSolid(e.getWorld(), e.getPos(), f.getOpposite())) {
-//									te.renderMap.add(Face.getFullFaceFromEnumFacing(f, blockState));
-//								}
+						ResourceLocation recourse = block.getRegistryName();
+						e.getWorld().destroyBlock(e.getPos(), false);
+						e.getWorld().setBlockState(e.getPos(), ModBlocks.mini_block.getDefaultState());
+						TileEntityMiniBlock te = (TileEntityMiniBlock) e.getWorld().getTileEntity(e.getPos());
+//						((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.clear();
+//						((MiniBlock) e.getWorld().getBlockState(e.getPos()).getBlock()).objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
+						te.objs.clear();
+//						te.objs.add(new Obj(0.0, 0.0, 0.0, 1.0, 1.0, 1.0, blockState));
+						te.objs.add(new Obj(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, blockState));
+						for(EnumFacing f : EnumFacing.VALUES) {
+							te.addToRenderMap(te, new Face(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ, f, blockState, false), false);
+						}
+
+//						te.renderMap.clear();
+//						for(EnumFacing f : EnumFacing.VALUES) {
+//							IBlockState s = Face.getBlockNextToFace(e.getWorld(), e.getPos(), f);
+//							if(!s.isOpaqueCube() && !s.isSideSolid(e.getWorld(), e.getPos(), f.getOpposite())) {
+//								te.renderMap.add(Face.getFullFaceFromEnumFacing(f, blockState));
 //							}
-//							if(block.isFullBlock(blockState)) {
-//								te.addFullFaces(blockState);
-//							}
-							te.removeBitFromBlock(MiniBlock.bounds, e.getWorld(), e.getPos());
 //						}
+//						if(block.isFullBlock(blockState)) {
+//							te.addFullFaces(blockState);
+//						}
+						te.removeBitFromBlock(e.getEntityPlayer(), MiniBlock.bounds, e.getWorld(), e.getPos(), true);
 					}
 				}
 				e.setCanceled(true);
@@ -101,14 +130,23 @@ public class customEvents {
 			}
 		}
 	}
-
-	@SubscribeEvent
-	public void blockUpdate(BlockEvent.NeighborNotifyEvent e) {
-		BlockPos pos = e.getPos();
-		World world = e.getWorld();
-		if(e.getWorld().getBlockState(pos).getBlock() instanceof MiniBlock) {
-//			e.
+	
+	public ItemStack getBestChiselInHotbar(EntityPlayer p) {
+		for(int i : new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8}) {
+			ItemStack s = p.inventory.getStackInSlot(i);
+			System.out.println("stack " + i + " is: " + s);
+			if(s.getItem() instanceof ItemChiselBase) {
+				ItemStack currentCurrentChisel = ItemChiselBase.currentChisel;
+				int level = 0;
+				if(currentCurrentChisel.getItem() instanceof ItemChiselBase) {
+					level = ((ItemChiselBase) currentCurrentChisel.getItem()).getHarvestLevelForChisel();
+				}
+				if(((ItemChiselBase) s.getItem()).getHarvestLevelForChisel() > level) {
+					ItemChiselBase.currentChisel = s;
+				}
+			}
 		}
+		return new ItemStack(Blocks.AIR);
 	}
 	
 	@SubscribeEvent
@@ -120,7 +158,7 @@ public class customEvents {
 			if(e.getTarget().getBlockPos() != null) {
 				IBlockState blockState = p.getEntityWorld().getBlockState(e.getTarget().getBlockPos());
 				Block block = blockState.getBlock();
-				if(stack.getItem() instanceof ItemChiselBase) {
+				if(stack.getItem() instanceof ItemChiselBase || stack.getItem() instanceof Bit) {
 					Vec3d v = e.getTarget().hitVec;
 					int s = e.getTarget().sideHit.getIndex();
 					// Side 0 = down
@@ -188,5 +226,5 @@ public class customEvents {
 		}
 		
 	}
-
+	
 }
